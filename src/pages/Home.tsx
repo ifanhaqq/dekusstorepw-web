@@ -3,6 +3,7 @@ import { supabase } from "../utils/supabase";
 import type { Password } from "../const/types";
 import { Check, SquarePen, Trash } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import LoadingGif from "../assets/loading.gif";
 
 export default function Home() {
   const [passwords, setPasswords] = useState<Password[]>([]);
@@ -349,7 +350,7 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
           <div className="relative">
-            <img className="w-20" src="/loading.gif" alt="Loading..." />
+            <img className="w-20" src={LoadingGif} alt="Loading..." />
           </div>
         </div>
       )}
