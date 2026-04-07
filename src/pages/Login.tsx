@@ -3,7 +3,11 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { supabase } from "../utils/supabase";
 import LoadingGif from "../assets/loading.gif";
 
-export default function Login() {
+type Props = {
+  handleSetPassword: (password: string) => void;
+};
+
+export default function Login({ handleSetPassword }: Props) {
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -45,6 +49,7 @@ export default function Login() {
     }
     captchaRef.current?.resetCaptcha();
     setCaptchaToken(null);
+    handleSetPassword(form.password);
     return data;
   };
 
