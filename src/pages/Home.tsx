@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { supabase } from "../utils/supabase";
-import type { Password } from "../const/types";
+import type { Password, PasswordInput } from "../const/types";
 import { Check, SquarePen, Trash } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import LoadingGif from "../assets/loading.gif";
+import KeyContext from "../context/KeyContext";
+import { encryptPassword } from "../utils/crypto";
 
 export default function Home() {
   const [passwords, setPasswords] = useState<Password[]>([]);
@@ -16,6 +18,12 @@ export default function Home() {
     username: "",
     password: "",
   });
+
+  const keyPair = useContext(KeyContext);
+
+  if (!keyPair) {
+    throw new Error("KeyContext is not available");
+  }
 
   const [loading, setLoading] = useState(false);
   const [warning, setWarning] = useState<{
@@ -40,9 +48,23 @@ export default function Home() {
   const handleAdd = async () => {
     if (!form.platform || !form.username || !form.password) return;
     setLoading(true);
+
+    const encryptedPassword = await encryptPassword(
+      form.password,
+      keyPair.publicKey!,
+    );
+
+    const passwordData: PasswordInput = {
+      platform: form.platform,
+      username: form.username,
+      encrypted_password: encryptedPassword.encryptedPassword,
+      encrypted_key: encryptedPassword.encryptedKey,
+      iv_password: encryptedPassword.ivPassword,
+    };
+
     const { data, error } = await supabase
       .from("passwords")
-      .insert([form])
+      .insert([passwordData])
       .select();
 
     if (error) throw error;

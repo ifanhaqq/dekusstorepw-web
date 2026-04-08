@@ -136,15 +136,13 @@ export const getPublicKey = async (publicKeyBase64: string) => {
 
 export const encryptPassword = async (
   password: string,
-  publicKeyBase64: string,
+  publicKey: CryptoKey,
 ) => {
   const aesKey = await crypto.subtle.generateKey(
     { name: "AES-GCM", length: 256 },
     true,
     ["encrypt", "decrypt"],
   );
-
-  const publicKey = await getPublicKey(publicKeyBase64);
 
   const ivPassword = crypto.getRandomValues(new Uint8Array(12));
 

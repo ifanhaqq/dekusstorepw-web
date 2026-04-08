@@ -22,7 +22,12 @@ export const KeyProvider = ({ children, password }: KeyProviderProps) => {
 
   const { session } = AuthContext();
 
+  if (!password) {
+    console.log("Password is required to fetch keys.");
+  }
+
   useEffect(() => {
+    if (!session || !password) return;
     async function fetchPrivateKey() {
       const { data: keys, error } = await supabase.from("keys").select("*");
 
