@@ -247,15 +247,13 @@ export default function Home() {
         )}
       </AnimatePresence>
       <div
-        className={`min-h-screen bg-gray-950 text-gray-200 ${isMobile ? "p-4" : "p-12"} container mx-auto flex flex-col`}
+        className={`min-h-screen bg-gray-950 text-gray-200 p-4 sm:p-12 container mx-auto flex flex-col`}
       >
         {/* Header */}
         <div
-          className={`flex justify-between items-center ${isMobile ? "mt-4 px-4 mb-4" : "mb-6 "}`}
+          className={`flex justify-between items-center sm:mb-6 sm:mt-0 sm:px-0 mt-4 px-4 mb-4 `}
         >
-          <h1
-            className={`${isMobile ? "text-xl" : "text-2xl"} font-bold tracking-wide`}
-          >
+          <h1 className={`sm:text-2xl text-xl font-bold tracking-wide`}>
             🔐 Password Manager
           </h1>
 
@@ -269,7 +267,7 @@ export default function Home() {
 
         {/* Cards */}
         <div
-          className={`grid grid-cols-1 ${isMobile ? "gap-2 max-h-[77vh]" : "md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[72vh]"} overflow-auto mt-6 no-scrollbar`}
+          className={`grid grid-cols-1 ${isMobile ? "gap-2" : "md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[72vh]"} max-h-[77vh] sm:max-h-[72vh] overflow-auto mt-6 no-scrollbar`}
         >
           {passwords.map((item) => (
             <div
@@ -326,7 +324,7 @@ export default function Home() {
         </div>
 
         {/* Logout */}
-        <div className={`flex ${isMobile ? "my-auto" : "mt-auto"} `}>
+        <div className={`flex sm:my-0 sm:mt-auto my-auto mt-8 `}>
           <button
             onClick={handleLogout}
             className="bg-red-600 px-4 py-2 rounded-lg shadow hover:bg-red-500 transition"

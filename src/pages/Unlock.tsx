@@ -49,7 +49,7 @@ export default function Unlock({ handleSetPassword, handleSetLocked }: Props) {
     <div className="min-h-screen bg-gray-950 text-gray-200 p-6 container mx-auto flex items-center justify-center">
       <div className="bg-gray-800 p-4 rounded-lg shadow-md w-full max-w-sm flex flex-col ">
         <h2 className="text-xl text-center font-semibold mb-8">
-          Page refreshed, please enter your password again!
+          For extra security, please enter your password again!
         </h2>
         <input
           type="password"
