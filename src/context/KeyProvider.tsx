@@ -1,24 +1,18 @@
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import { supabase } from "../utils/supabase";
 import { getPrivateKey, getPublicKey } from "../utils/crypto";
+import KeyContext from "./KeyContext";
 
 type KeyProviderProps = {
   children: React.ReactNode;
   password: string;
 };
 
-const KeyContext = createContext<{
-  privateKey: CryptoKey | null;
-  publicKey: CryptoKey | null;
-}>({
-  privateKey: null,
-  publicKey: null,
-});
-
 export const KeyProvider = ({ children, password }: KeyProviderProps) => {
   const [privateKey, setPrivateKey] = useState<CryptoKey | null>(null);
   const [publicKey, setPublicKey] = useState<CryptoKey | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const { session } = AuthContext();
 
@@ -29,6 +23,7 @@ export const KeyProvider = ({ children, password }: KeyProviderProps) => {
   useEffect(() => {
     if (!session || !password) return;
     async function fetchPrivateKey() {
+      setLoading(true);
       const { data: keys, error } = await supabase.from("keys").select("*");
 
       if (keys) {
@@ -45,9 +40,14 @@ export const KeyProvider = ({ children, password }: KeyProviderProps) => {
       if (error) {
         console.error("Error fetching keys:", error);
       }
+      setLoading(false);
     }
     fetchPrivateKey();
   }, [session, password]);
+
+  if (loading || !privateKey || !publicKey) {
+    return <div>Loading keys...</div>;
+  }
 
   return (
     <KeyContext.Provider value={{ privateKey, publicKey }}>

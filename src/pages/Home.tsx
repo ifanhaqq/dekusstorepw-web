@@ -5,7 +5,7 @@ import { Check, SquarePen, Trash } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import LoadingGif from "../assets/loading.gif";
 import KeyContext from "../context/KeyContext";
-import { encryptPassword } from "../utils/crypto";
+import { encryptPassword, decryptPassword } from "../utils/crypto";
 
 export default function Home() {
   const [passwords, setPasswords] = useState<Password[]>([]);
@@ -20,6 +20,8 @@ export default function Home() {
   });
 
   const keyPair = useContext(KeyContext);
+
+  const [isMobile, setIsMobile] = useState(false);
 
   if (!keyPair) {
     throw new Error("KeyContext is not available");
@@ -69,8 +71,18 @@ export default function Home() {
 
     if (error) throw error;
 
+    const decryptedPassword = await decryptPassword(
+      keyPair.privateKey!,
+      data![0].encrypted_key,
+      data![0].iv_password,
+      data![0].encrypted_password,
+    );
+
     setForm({ platform: "", username: "", password: "" });
-    setPasswords((prev) => [...prev, data![0]]);
+    setPasswords((prev) => [
+      ...prev,
+      { ...data![0], password: decryptedPassword },
+    ]);
     setIsOpen({ open: false, type: "", id: null });
     setLoading(false);
     handleSetWarning("success", "Password added successfully!");
@@ -129,11 +141,27 @@ export default function Home() {
   const handleUpdate = async () => {
     if (!form.platform || !form.username || !form.password) return;
     setLoading(true);
+    const encryptedPassword = await encryptPassword(
+      form.password,
+      keyPair.publicKey!,
+    );
+
+    const updatedPassword: PasswordInput = {
+      platform: form.platform,
+      username: form.username,
+      encrypted_password: encryptedPassword.encryptedPassword,
+      encrypted_key: encryptedPassword.encryptedKey,
+      iv_password: encryptedPassword.ivPassword,
+    };
+
     const { error } = await supabase
       .from("passwords")
-      .update(form)
+      .update(updatedPassword)
       .eq("id", isOpen.id);
-    if (error) throw error;
+    if (error) {
+      handleSetWarning("error", "Failed to update password, please try again.");
+      throw error;
+    }
     handleCloseModal();
     setLoading(false);
 
@@ -149,6 +177,7 @@ export default function Home() {
     setLoading(true);
     const { error } = await supabase.from("passwords").delete().eq("id", id);
     if (error) {
+      handleSetWarning("error", "Failed to delete password, please try again.");
       throw error;
     } else {
       setPasswords((prev) => prev.filter((password) => password.id !== id));
@@ -169,17 +198,37 @@ export default function Home() {
       setLoading(true);
       const { data: passwords } = await supabase.from("passwords").select("*");
 
-      console.log(passwords);
-
       if (passwords) {
+        passwords.map(async (password) => {
+          const decryptedPassword = await decryptPassword(
+            keyPair.privateKey!,
+            password.encrypted_key,
+            password.iv_password,
+            password.encrypted_password,
+          );
+          password.password = decryptedPassword;
+        });
+
         setPasswords(passwords);
       }
       setLoading(false);
     }
 
     getpasswords();
-  }, []);
+  }, [keyPair]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setIsMobile(true);
+      } else {
+        setIsMobile(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   return (
     <div className="min-h-screen bg-gray-950 text-gray-200 mx-auto container">
       <AnimatePresence>
@@ -197,10 +246,16 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="min-h-screen bg-gray-950 text-gray-200 p-12 container mx-auto flex flex-col">
+      <div
+        className={`min-h-screen bg-gray-950 text-gray-200 ${isMobile ? "p-4" : "p-12"} container mx-auto flex flex-col`}
+      >
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold tracking-wide">
+        <div
+          className={`flex justify-between items-center ${isMobile ? "mt-4 px-4 mb-4" : "mb-6 "}`}
+        >
+          <h1
+            className={`${isMobile ? "text-xl" : "text-2xl"} font-bold tracking-wide`}
+          >
             🔐 Password Manager
           </h1>
 
@@ -213,7 +268,9 @@ export default function Home() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[72vh] overflow-auto mt-6 no-scrollbar">
+        <div
+          className={`grid grid-cols-1 ${isMobile ? "gap-2 max-h-[77vh]" : "md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[72vh]"} overflow-auto mt-6 no-scrollbar`}
+        >
           {passwords.map((item) => (
             <div
               key={item.id}
@@ -269,7 +326,7 @@ export default function Home() {
         </div>
 
         {/* Logout */}
-        <div className="flex mt-auto">
+        <div className={`flex ${isMobile ? "my-auto" : "mt-auto"} `}>
           <button
             onClick={handleLogout}
             className="bg-red-600 px-4 py-2 rounded-lg shadow hover:bg-red-500 transition"
