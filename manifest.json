@@ -1,7 +1,7 @@
 {
   "name": "Deku Lock",
   "short_name": "DekuLock",
-  "start_url": "/",
+  "start_url": "/dekusstorepw-web/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0f172a",
